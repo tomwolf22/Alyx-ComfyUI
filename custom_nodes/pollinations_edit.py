@@ -12,7 +12,10 @@ class PollinationsEdit:
         return {
             "required": {
                 "image_url": ("STRING", {}),
-                "prompt": ("STRING", {}),
+                "prompt": ("STRING", {"multiline": True}),
+                "unet_name": ("STRING", {"default": "qwen-image"}),
+                "width": ("INT", {"default": 1024, "min": 64, "max": 4096}),
+                "height": ("INT", {"default": 1024, "min": 64, "max": 4096}),
             }
         }
 
@@ -20,14 +23,13 @@ class PollinationsEdit:
     FUNCTION = "run"
     CATEGORY = "pollinations"
 
-    def run(self, image_url, prompt):
+    def run(self, image_url, prompt, unet_name, width, height):
         key = os.environ.get("POLLINATIONS_API_KEY")
 
-        # encode prompt once (always safe)
+        # encode prompt safely
         safe_prompt = urllib.parse.quote(prompt, safe="")
 
-        # SAFE: prevent double encoding
-        # only encode if it is NOT already encoded
+        # prevent double-encoding image URLs
         if "%3A" in image_url or "%2F" in image_url:
             safe_image = image_url
         else:
@@ -37,8 +39,8 @@ class PollinationsEdit:
             "https://gen.pollinations.ai/image/"
             f"{safe_prompt}"
             f"?model=qwen-image"
-            f"&width=1024"
-            f"&height=1024"
+            f"&width={width}"
+            f"&height={height}"
             f"&enhance=true"
             f"&image={safe_image}"
             f"&key={key}"
