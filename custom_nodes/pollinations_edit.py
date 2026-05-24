@@ -1,21 +1,21 @@
-import requests
 import os
+import requests
 
 class PollinationsEdit:
     @classmethod
     def INPUT_TYPES(cls):
         return {
             "required": {
+                "image_url": ("STRING", {}),
                 "prompt": ("STRING", {}),
-                "image_url": ("STRING", {})
             }
         }
 
-    RETURN_TYPES = ("STRING",)
+    RETURN_TYPES = ("IMAGE",)
     FUNCTION = "run"
-    CATEGORY = "api"
+    CATEGORY = "pollinations"
 
-    def run(self, prompt, image_url):
+    def run(self, image_url, prompt):
         key = os.environ.get("POLLINATIONS_API_KEY")
 
         url = (
@@ -24,20 +24,19 @@ class PollinationsEdit:
             f"?model=qwen-image"
             f"&width=1024"
             f"&height=1024"
-            f"&seed=0"
             f"&enhance=true"
             f"&image={image_url}"
             f"&key={key}"
         )
 
-        r = requests.get(url)
-        return (r.text,)
-
+        # return image URL directly (ComfyUI accepts URL in IMAGE pipe)
+        return (url,)
+        
 
 NODE_CLASS_MAPPINGS = {
     "PollinationsEdit": PollinationsEdit
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
-    "Pollinations Edit": "Pollinations Edit Engine"
+    "Pollinations Edit": "Pollinations Edit"
 }
