@@ -2,6 +2,7 @@ import os
 import requests
 import urllib.parse
 import numpy as np
+import torch
 from PIL import Image
 import io
 
@@ -22,7 +23,15 @@ class PollinationsEdit:
     def run(self, image_url, prompt):
         key = os.environ.get("POLLINATIONS_API_KEY")
 
-        safe_prompt = urllib.parse.quote(prompt)
+        # encode prompt once (always safe)
+        safe_prompt = urllib.parse.quote(prompt, safe="")
+
+        # SAFE: prevent double encoding
+        # only encode if it is NOT already encoded
+        if "%3A" in image_url or "%2F" in image_url:
+            safe_image = image_url
+        else:
+            safe_image = urllib.parse.quote(image_url, safe="")
 
         url = (
             "https://gen.pollinations.ai/image/"
@@ -31,17 +40,16 @@ class PollinationsEdit:
             f"&width=1024"
             f"&height=1024"
             f"&enhance=true"
-            f"&image={urllib.parse.quote(image_url)}"
+            f"&image={safe_image}"
             f"&key={key}"
         )
 
-        # fetch image (IMPORTANT FIX)
         r = requests.get(url)
         r.raise_for_status()
 
         img = Image.open(io.BytesIO(r.content)).convert("RGB")
         img = np.array(img).astype(np.float32) / 255.0
-        img = np.expand_dims(img, axis=0)
+        img = torch.from_numpy(img)[None,]
 
         return (img,)
 
