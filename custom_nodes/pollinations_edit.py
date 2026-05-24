@@ -1,5 +1,9 @@
 import os
 import requests
+import urllib.parse
+import numpy as np
+from PIL import Image
+import io
 
 class PollinationsEdit:
     @classmethod
@@ -18,20 +22,29 @@ class PollinationsEdit:
     def run(self, image_url, prompt):
         key = os.environ.get("POLLINATIONS_API_KEY")
 
+        safe_prompt = urllib.parse.quote(prompt)
+
         url = (
             "https://gen.pollinations.ai/image/"
-            f"{prompt}"
+            f"{safe_prompt}"
             f"?model=qwen-image"
             f"&width=1024"
             f"&height=1024"
             f"&enhance=true"
-            f"&image={image_url}"
+            f"&image={urllib.parse.quote(image_url)}"
             f"&key={key}"
         )
 
-        # return image URL directly (ComfyUI accepts URL in IMAGE pipe)
-        return (url,)
-        
+        # fetch image (IMPORTANT FIX)
+        r = requests.get(url)
+        r.raise_for_status()
+
+        img = Image.open(io.BytesIO(r.content)).convert("RGB")
+        img = np.array(img).astype(np.float32) / 255.0
+        img = np.expand_dims(img, axis=0)
+
+        return (img,)
+
 
 NODE_CLASS_MAPPINGS = {
     "PollinationsEdit": PollinationsEdit
