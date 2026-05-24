@@ -10,4 +10,4 @@ RUN pip install -r requirements.txt
 
 EXPOSE 8188
 
-CMD ["python", "main.py", "--listen", "0.0.0.0", "--port", "8188"]
+CMD ["python", "main.py", "--listen", "0.0.0.0", "--port", "8188", "--cpu"]
